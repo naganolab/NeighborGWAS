@@ -20,8 +20,8 @@ colnames(position) = c("X","chr","pos","maf")
 position$maf[position$maf>0.5] = 1-position$maf[position$maf>0.5]
 
 p_adj = 0.05/(nrow(gwas_out))
-chr_rep = table(position$chr)
-cols2 = c(rgb(1,0,0, 2*position$maf[1:cumsum(chr_rep)[1]]), rgb(0,1,0, 2*position$maf[cumsum(chr_rep)[1]:cumsum(chr_rep)[2]]), rgb(0,0,1, 2*position$maf[cumsum(chr_rep)[2]:cumsum(chr_rep)[3]]), rgb(0,0,0, 2*position$maf[cumsum(chr_rep)[3]:cumsum(chr_rep)[4]]), rgb(1,0,1, 2*position$maf[cumsum(chr_rep)[4]:cumsum(chr_rep)[5]]))
+chr_rep = cumsum(table(position$chr))
+cols2 = c(rgb(1,0,0, 2*position$maf[1:chr_rep[1]]), rgb(0,1,0, 2*position$maf[(chr_rep[1]+1):(chr_rep[2])]), rgb(0,0,1, 2*position$maf[(chr_rep[2]+1):(chr_rep[3])]), rgb(0,0,0, 2*position$maf[(chr_rep[3]+1):(chr_rep[4])]), rgb(1,0,1, 2*position$maf[(chr_rep[4]+1):(chr_rep[5])]))
 
 # (1) depicting Manhattan plots
 png(paste0(file_name,".png"), width=7, height=8, res=600, units="in")
