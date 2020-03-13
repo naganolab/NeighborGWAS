@@ -1,5 +1,5 @@
 # NeighborGWAS
-R source codes, accession list, and phenotype data used in "Neighbor GWAS: incorporating neighbor genotypic identity into genome-wide association studies of field herbivory on Arabidopsis thaliana" by Yasuhiro Sato, Eiji Yamamoto, Kentaro K. Shimizu and Atsushi J. Nagano. For questions about these codes, please contact Y. Sato (sato.yasuhiro.36c@kyoto-u.jp).  
+R source codes, accession list, and phenotype data used in "Neighbor GWAS: incorporating neighbor genotypic identity into genome-wide association studies of field herbivory on Arabidopsis thaliana" by Yasuhiro Sato, Eiji Yamamoto, Kentaro K. Shimizu and Atsushi J. Nagano. For questions about these codes, please contact Y. Sato (sato.yasuhiro.36c@kyoto-u.jp). 
 
 ## simulation
 neighbor GWAS of simulated phenotypes
@@ -33,9 +33,11 @@ A shell script to prepare input files before running lmm
 
 ### /lmekinGWAS
 linear mixed model with a kinship structure using the gaston package in R  
-1. run_lmm.R  
+1. prep_lmm.R  
+R source code to prepare kinship matrices before running GWAS  
+2. run_lmm.R  
 R source code to estimate variance components and then to perform association tests  
-2. run_lmm.sh  
+3. run_lmm.sh  
 A shell script to control lmm iterations from terminal. Current strategy is simultanous runnning with a single core  
 #### /output
 A folder to store output files  
@@ -48,7 +50,3 @@ postGWAS analyses
 R source code to depict Manhattan plots and QQ-plots  
 2. GeneList_lmm.py  
 Python code to make a list of candidate genes from GWAS output and .gff file  
-3. GO_analysis.R  
-R source code to conduct a GO enrichment analysis  
-
-
