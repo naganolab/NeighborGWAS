@@ -2,7 +2,7 @@
 ### Simulating the power of neighborGWAS ###
 ############################################
 
-# 25-Sept-2019
+# 23-Feb-2020
 # This R script was written for 
 # Neighbor GWAS: incorporating neighbor genotypic identity into genome-wide association studies of field herbivory on Arabidopsis thaliana
 # which was co-authored by Yasuhiro Sato, Eiji Yamamoto, Kentaro K. Shimizu and Atsushi J. Nagano
@@ -72,7 +72,7 @@ qtl_pheno_simu = function(g, sigma, eigenK_self, eigenK_nei, eigenK_sxn, tau_rat
 # tau_ratio : ratio for contribution of engenK_self,  eigenK_nei and eigenK_sxn to the phenotype.
 # pveB : proportion of variance explained by genetic effect designed by 'g' vector.
 # pveM : proportion of variance explained by all genetic effects (i.e., g and eigenK_..)
-real_geno_simu = function(s, a, n_causal, tau_ratio=c(1,1,1), pveB, pveM, rect)
+real_geno_simu = function(s_max, a, n_causal, tau_ratio=c(1,1,1), pveB, pveM, rect)
 {
   
   perm = sample(colnames(g_bin),rect*rect,replace = FALSE)
@@ -172,7 +172,7 @@ real_geno_simu = function(s, a, n_causal, tau_ratio=c(1,1,1), pveB, pveM, rect)
     return(coval)
   }
   
-  g_neiS = mapply(nei_covalS,1:n,s=s)
+  g_neiS = mapply(nei_covalS,1:n,s=s_max)
   g_neiS = t(g_neiS)
   g_neiS = (g_neiS-mean(g_neiS))/sd(g_neiS)
   
@@ -195,12 +195,49 @@ real_geno_simu = function(s, a, n_causal, tau_ratio=c(1,1,1), pveB, pveM, rect)
   
   Y = pheno$y
   
-  Vn = c(); aucS = c(); aucN = c(); aucSlm = c(); aucNlm=c()
-  for(i in 1:s) {
+  # s = 0 without neighbor effects
+  res = lmm.aireml(Y=Y,K=list(K_self),verbose=T)
+  tau = c(res$sigma2,res$tau,0)
+  
+  eiK = eigen(K_self)
+  res_null = lmm.diago(Y=Y, eigenK=eiK, verbose = F)
+  LL_null = lmm.diago.profile.likelihood(tau=res_null$tau, s2=res_null$sigma2, Y=Y, eigenK=eiK)[1,1] 
+  
+  res_null_lm = lm(Y~1)
+  LL_null_lm = logLik(res_null_lm)
+  
+  p_list = c()
+  for(i in 1:p) { print(i)
+    LL =  lmm.diago.profile.likelihood(tau=res_null$tau, s2=res_null$sigma2, Y=Y, X=model.matrix(~g_self[,i]), eigenK=eiK)[1,1]
+    p_LL = pchisq(-2*(LL_null-LL),1,lower.tail = F)
+
+    LL_lm = logLik(lm(Y~g_self[,i]))
+    p_LL_lm = pchisq(-2*(LL_null_lm-LL_lm),1,lower.tail = F)
+    
+    p_list = rbind(p_list, c(p_LL,p_LL_lm))
+  }
+  
+  p_self = -log10(p_list[,1])
+  p_self_lm = -log10(p_list[,2])
+  ans_self = round(b_self,0)
+  ans_self[ans_self!=0] = 1
+
+  ans = data.frame(p_self,p_self_lm,ans_self)
+  roc_self = roc(ans_self~p_self,data=ans)
+  roc_self_lm = roc(ans_self~p_self_lm,data=ans)
+
+  auc = roc_self$auc
+  auclm = roc_self_lm$auc
+  
+  resList = c(0, a, n_causal, tau_ratio[1], tau_ratio[2], tau_ratio[3], pveB, pveM, tau, auc, auclm)
+  # save(ans,file=paste0("ans_s",0,"_n",n_causal,"_pveB",pveB,"_alpha",alpha,".RData"),compress = T)
+
+  #s = 1 to s_max
+  for(s in 1:s_max) {
     g_self = g_bin[,perm]
     g_self[g_self==0] = -1
     
-    g_nei = mapply(nei_coval,1:n,s=i)
+    g_nei = mapply(nei_coval,1:n,s=s)
     g_nei = t(g_nei)
     g_nei = (g_nei-mean(g_nei))/sd(g_nei)
     
@@ -210,55 +247,39 @@ real_geno_simu = function(s, a, n_causal, tau_ratio=c(1,1,1), pveB, pveM, rect)
     g_self = (g_self-mean(g_self))/sd(g_self)
     
     res = lmm.aireml(Y=Y,K=list(K_self,K_nei),verbose=T)
-    Vn = c(Vn,(res$tau/sum(res$sigma2,res$tau))[2])
+    tau = c(res$sigma2,res$tau)
     
     eiK = eigen(res$tau[1]*K_self+res$tau[2]*K_nei)
     
-    res_null = lmm.diago(Y=Y, eigenK=eiK, verbose = F)
-    LL_null = lmm.diago.profile.likelihood(tau=res_null$tau, s2=res_null$sigma2, Y=Y, eigenK=eiK)[1,1] 
-    
-    res_null_lm = lm(Y~1)
-    LL_null_lm = logLik(res_null_lm)
-    
     p_list = c()
-    
     for(i in 1:p) { print(i)
       LL_self =  lmm.diago.profile.likelihood(tau=res_null$tau, s2=res_null$sigma2, Y=Y, X=model.matrix(~g_self[,i]), eigenK=eiK)[1,1]
       LL_nei =  lmm.diago.profile.likelihood(tau=res_null$tau, s2=res_null$sigma2, Y=Y, X=model.matrix(~g_self[,i]+g_nei[,i]), eigenK=eiK)[1,1]
-      
-      p_self = pchisq(-2*(LL_null-LL_self),1,lower.tail = F)
       p_nei = pchisq(-2*(LL_self-LL_nei),1,lower.tail = F)
       
       LL_self_lm = logLik(lm(Y~g_self[,i]))
       LL_nei_lm = logLik(lm(Y~g_self[,i]+g_nei[,i]))
-      
-      p_self_lm = pchisq(-2*(LL_null_lm-LL_self_lm),1,lower.tail = F)
       p_nei_lm = pchisq(-2*(LL_self_lm-LL_nei_lm),1,lower.tail = F)
       
-      p_list = rbind(p_list, c(p_self,p_nei,p_self_lm,p_nei_lm))
+      p_list = rbind(p_list, c(p_nei,p_nei_lm))
     }
     
-    p_self = -log10(p_list[,1])
-    p_nei = -log10(p_list[,2])
-    p_self_lm = -log10(p_list[,3])
-    p_nei_lm = -log10(p_list[,4])
-    ans_self = round(b_self,0)
+    p_nei = -log10(p_list[,1])
+    p_nei_lm = -log10(p_list[,2])
     ans_nei = round(b_nei,0)
-    ans_self[ans_self!=0] = 1
     ans_nei[ans_nei!=0] = 1
     
-    ans = data.frame(p_self,p_self_lm,p_nei,p_nei_lm,ans_self,ans_nei)
-    roc_self = roc(factor(ans_self)~p_self,data=ans)
-    roc_nei = roc(factor(ans_nei)~p_nei,data=ans)
-    roc_self_lm = roc(factor(ans_self)~p_self_lm,data=ans)
-    roc_nei_lm = roc(factor(ans_nei)~p_nei_lm,data=ans)
+    ans = data.frame(p_nei,p_nei_lm,ans_nei)
+    roc_nei = roc(ans_nei~p_nei,data=ans)
+    roc_nei_lm = roc(ans_nei~p_nei_lm,data=ans)
     
-    aucS = c(aucS, roc_self$auc)
-    aucN = c(aucN, roc_nei$auc)
-    aucSlm = c(aucSlm, roc_self_lm$auc)
-    aucNlm = c(aucNlm, roc_nei_lm$auc)
+    auc = roc_nei$auc
+    auclm = roc_nei_lm$auc
+    
+    resList = rbind(resList, c(s, a, n_causal, tau_ratio[1], tau_ratio[2], tau_ratio[3], pveB, pveM, tau, auc, auclm))
+	# save(ans,file=paste0("ans_s",s,"_n",n_causal,"_pveB",pveB,"_alpha",alpha,".RData"),compress = T)
   }
-  return(c(a, n_causal, tau_ratio[1], tau_ratio[2], tau_ratio[3], pveB, pveM, Vn, aucS, aucN, aucSlm, aucNlm))
+  return(resList)
 }#real_geno_simu()
 
 
@@ -281,7 +302,7 @@ load("./Ara250kRegMap_chr12_MAF10.RData")
 
 # (5) set parameters for simulation
 
-s = 3
+s_max = 3
 rect = 36
 tau_ratio = c(as.numeric(tau1), 
             as.numeric(tau2), 
@@ -291,31 +312,32 @@ tau_ratio = c(as.numeric(tau1),
 # (6) execute simulation
 
 resList = c()
-for(i in 1:15) {
-  res = real_geno_simu(s = s, 
-                       a = as.numeric(a), 
-                       n_causal = as.numeric(n_causal), 
-                       tau_ratio = tau_ratio, 
-                       pveB = as.numeric(pveB), 
-                       pveM = as.numeric(pveM),
-                       rect = rect)
+for(i in 1:10) {
+  res = real_geno_simu(s_max = s_max,
+                         a = as.numeric(a), 
+                         n_causal = as.numeric(n_causal), 
+                         tau_ratio = tau_ratio, 
+                         pveB = as.numeric(pveB), 
+                         pveM = as.numeric(pveM),
+                         rect = rect)
   resList = rbind(resList, res)
 }#i
 
 
 # (7) return results
-
-colnames(resList) = c("alpha", 
+rownames(resList) = c()
+colnames(resList) = c("s",
+                      "alpha", 
                       "n_causal", 
                       "tau1", 
                       "tau2", 
                       "tau3", 
                       "pveB", 
-                      "pveM", 
-                      paste0("Vn_",c(1:s)), 
-                      paste0("AUC_self",c(1:s)), 
-                      paste0("AUC_nei",c(1:s)), 
-                      paste0("AUC_self_lm",c(1:s)), 
-                      paste0("AUC_nei_lm",c(1:s)))
+                      "pveM",
+                      "sigma2",
+                      "tau_s",
+                      "tau_n",
+                      "AUC", 
+                      "AUC_lm")
 write.csv(resList, file = paste0("./output/AUCs_", iter,".csv"), row.names = FALSE)
 
