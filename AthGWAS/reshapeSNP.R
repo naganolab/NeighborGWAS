@@ -2,7 +2,7 @@
 # Cuting off SNP data with MAF and LD, and then preparing SNPs for gl1 mutants #
 ################################################################################
 
-# 16-Oct-2019
+# 23-Feb-2020
 # This R script was written for 
 # Neighbor GWAS: incorporating neighbor genotypic identity into genome-wide association studies of field herbivory on Arabidopsis thaliana
 # which was co-authored by Yasuhiro Sato, Eiji Yamamoto, Kentaro K. Shimizu and Atsushi J. Nagano
