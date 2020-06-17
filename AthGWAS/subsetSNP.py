@@ -15,7 +15,7 @@ import numpy as np
 import csv
 
 # (2) load data
-# The input .hdf5 file was provided by Uemit Seren at GMI Molecular Plant Biology
+# The input .hdf5 file was downloaded from https://aragwas.1001genomes.org/#/download-center
 # As recommended, the input file was handled using Python
 input_file = "all_chromosomes_binary.hdf5"
 h5file = h5py.File(input_file,"r")
