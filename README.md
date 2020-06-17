@@ -1,5 +1,5 @@
 # NeighborGWAS
-R source codes, accession list, and phenotype data used in "Neighbor GWAS: incorporating neighbor genotypic identity into genome-wide association studies of field herbivory on Arabidopsis thaliana" by Yasuhiro Sato, Eiji Yamamoto, Kentaro K. Shimizu and Atsushi J. Nagano. For questions about these codes, please contact Y. Sato (sato.yasuhiro.36c@kyoto-u.jp). 
+R source codes, accession list, and phenotype data used in "Neighbor GWAS: incorporating neighbor genotypic identity into genome-wide association studies of field herbivory on Arabidopsis thaliana" by Yasuhiro Sato, Eiji Yamamoto, Kentaro K. Shimizu and Atsushi J. Nagano. R package version is available at https://cran.r-project.org/package=rNeighborGWAS. For questions about these methods, please contact Y. Sato (sato.yasuhiro.36c@kyoto-u.jp). 
 
 ## simulation
 neighbor GWAS of simulated phenotypes
