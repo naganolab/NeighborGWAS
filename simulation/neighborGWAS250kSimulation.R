@@ -284,7 +284,7 @@ gwas_simu = function(s_max, a, n_causal, tau_ratio=c(1,1,1), pveB, pveM, rect)
 # n_causal : number of causal genes
 # rect : experimental plot deign (rect * rect square matrix)
 # following argmuments are used for function 'qtl_pheno_simu'
-# tau_ratio : ratio for contribution of engenK_self,  eigenK_nei and eigenK_sxn to the phenotype.
+# tau_ratio : ratio for contribution of PVE_self,  PVE_nei and PVE_sxn to the phenotype.
 # pveB : proportion of variance explained by genetic effect designed by 'g' vector.
 # pveM : proportion of variance explained by all genetic effects (i.e., g and eigenK_..)
 var_simu = function(s_max, a, n_causal, tau_ratio=c(1,1,1), pveB, pveM, rect) {
