@@ -8,7 +8,7 @@ R source code to show examples of spatial arrangements in a 2D Ising model. This
 2. neighborGWASsimul_prepGeno.R  
 R source code to subset the RegMap data  
 3. neighborGWAS250kSimulation.R  
-R source code to run simulations and calculate AUCs  
+R source code to run simulations   
 4. neighborGWAS250kSimulation.sh  
 A shell script to control simulations from terminal. Current strategy is simultanous runnning with a single core  
 #### /output
